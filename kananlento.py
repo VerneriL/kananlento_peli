@@ -1,21 +1,25 @@
 import pygame
 
+DEFAULT_SCREEN_SIZE = (800, 450)
+FPS_TEXT_COLOR = (128, 0, 128)  # dark blue
+
 
 def main():
     game = Game()
     game.run()
 
 
-DEFAULT_SCREEN_SIZE = (800, 450)
-
 class Game:
     def __init__(self):
         pygame.init()
+        self.clock = pygame.time.Clock()
         self.is_fullscreen = False
+        self.show_fps = True
         self.screen = pygame.display.set_mode(DEFAULT_SCREEN_SIZE)
         self.screen_w = self.screen.get_width()
         self.screen_h = self.screen.get_height()
         self.running = False
+        self.font16 = pygame.font.Font("fonts/SyneMono-Regular.ttf", 16)
         self.init_graphics()
         self.init_objects()
 
@@ -52,20 +56,17 @@ class Game:
     def init_objects(self):
         self.bird_alive = True
         self.bird_y_speed = 0
-        self.bird_pos = (self.screen_w / 3, self.screen_h / 2)
+        self.bird_pos = (self.screen_w / 3, self.screen_h / 4)
         self.bird_angle = 0
         self.bird_frame = 0
         self.bird_lift = False
 
     def scale_positions(self, scale_x, scale_y):
         self.bird_pos = (self.bird_pos[0] * scale_x, self.bird_pos[1] * scale_y)
-        self.bg_pos[0] = self.bg_pos[0] * scale_x
-        self.bg_pos[1] = self.bg_pos[1] * scale_x
-        self.bg_pos[2] = self.bg_pos[2] * scale_x
+        for i in range(len(self.bg_pos)):
+            self.bg_pos[i] = self.bg_pos[i] * scale_x
 
     def run(self):
-        clock = pygame.time.Clock()
-
         self.running = True
 
         while self.running:
@@ -73,7 +74,7 @@ class Game:
             self.handle_game_logic()
             self.update_screen()
             # Odota niin kauan, että ruudun päivitysnopeus on 60fps
-            clock.tick(60)
+            self.clock.tick(60)
 
         pygame.quit()
 
@@ -89,18 +90,18 @@ class Game:
                     self.bird_lift = False
                 elif event.key in (pygame.K_f, pygame.K_F11):
                     self.toggle_fullscreen()
-                elif event.key == (pygame.K_r, pygame.K_RETURN):
+                elif event.key in (pygame.K_r, pygame.K_RETURN):
                     self.init_objects()
 
-
     def toggle_fullscreen(self):
-        self.is_fullscreen = not self.is_fullscreen
         old_w = self.screen_w
         old_h = self.screen_h
         if self.is_fullscreen:
-            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        else:
             pygame.display.set_mode(DEFAULT_SCREEN_SIZE)
+            self.is_fullscreen = False
+        else:
+            pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            self.is_fullscreen = True
         screen = pygame.display.get_surface()
         self.screen_w = screen.get_width()
         self.screen_h = screen.get_height()
@@ -150,7 +151,7 @@ class Game:
         #self.screen.fill((230, 230, 255))
 
         # Piirrä taustakerrokset (3 kpl)
-        for i in [0, 1, 2]:
+        for i in range(len(self.bg_imgs)):
             # Ensin piirrä vasen tausta
             self.screen.blit(self.bg_imgs[i], (self.bg_pos[i], 0))
             # Jos vasen tausta ei riitä peittämään koko ruutua, niin...
@@ -172,6 +173,12 @@ class Game:
             bird_img_i = self.bird_dead_imgs[(self.bird_frame // 10) % 2]
         bird_img = pygame.transform.rotozoom(bird_img_i, self.bird_angle, 1)
         self.screen.blit(bird_img, self.bird_pos)
+
+        # Piirrä FPS luku
+        if self.show_fps:
+            fps_text = f"{self.clock.get_fps():.1f} fps"
+            fps_img = self.font16.render(fps_text, True, FPS_TEXT_COLOR)
+            self.screen.blit(fps_img, (0, 0))
 
         pygame.display.flip()
 
