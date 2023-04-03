@@ -22,6 +22,11 @@ class Game():
             pygame.transform.rotozoom(x, 0, 1/16)
             for x in bird_imgs
         ]
+        original_bird_dead_imgs = [
+            pygame.image.load(f"images/chicken/got_hit/frame-{i}.png")
+            for i in [1, 2]
+        ]
+
         bg_imgs = [
             pygame.image.load(f"images/background/layer_{i}.png")
             for i in [1, 2, 3]
@@ -84,13 +89,11 @@ class Game():
 
         # Move bird based on bird speed
         bird_y += self.bird_y_speed
-        
-        
+                
         if self.bird_alive: # Jos lintu elossa
             # Determine bird angle
             self.bird_angle = -90 * 0.04 * self.bird_y_speed
             self.bird_angle = max(min(self.bird_angle, 60), -60)
-
 
         # Tarkista onko lintu pudonnut maahan
         if bird_y > 600 - 140:
@@ -124,10 +127,11 @@ class Game():
 
         
         # Draw bird from images depending on frames up to 3
-        bird_img_i = self.bird_imgs[(self.bird_frame // 3) % 4]
-        # Draw bird
-        bird_img = pygame.transform.rotozoom(bird_img_i, self.bird_angle, 1)
-        self.screen.blit(bird_img, self.bird_pos)
+        if self.bird_alive:
+            bird_img_i = self.bird_imgs[(self.bird_frame // 3) % 4]
+        else:
+            bird_img = pygame.transform.rotozoom(bird_img_i, self.bird_angle, 1)
+            self.screen.blit(bird_img, self.bird_pos)
 
         # Display
         pygame.display.flip()
